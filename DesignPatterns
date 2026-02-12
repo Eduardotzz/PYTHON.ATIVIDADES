@@ -1,0 +1,124 @@
+#=====APIConnection====#
+
+import json
+
+class APIConnection:
+
+   _instance = None
+
+   def __new__(cls):
+      if cls._instance is None:
+         print("criando conexao com a API")
+         cls._instance = super(APIConnection, cls).__new__(cls)
+      return cls._instance
+
+   def Enviar_log(self, mensagem, usuario=None, usuario_id=None):
+      resposta = {
+         "status": "secess",
+         "mensagem": mensagem
+      }
+      if usuario:
+         resposta["usuario"] = usuario
+      if usuario_id:
+         resposta["id"] = usuario_id
+      return json.dumps(resposta)
+
+conn1 = APIConnection()
+
+# Aqui pedimos nome e ID do usuário para interatividade
+nome_usuario = input("Digite seu nome de usuário: ")
+id_usuario = input("Digite seu ID: ")
+
+print(conn1.Enviar_log("USUARIO LOGOU", nome_usuario, id_usuario))
+print(conn1.Enviar_log("USUARIO CLICOU EM SALVAR", nome_usuario, id_usuario))
+
+conn2 = APIConnection()
+# conn2 é o mesmo singleton, podemos usar os mesmos dados
+print(conn2.Enviar_log("USUARIO CLICOU EM SALVAR", nome_usuario, id_usuario))
+
+class EmailNotificacao:
+   def enviar(self, mensagem):
+      print(f"enviando email", {mensagem})
+
+class WatsAppNotificacao:
+   def enviar(self, mensagem):
+      print(f"enviando zap", {mensagem})
+
+class NotificacaoFactory:
+   
+   @staticmethod
+   def criar_notificacao(tipo):
+      if tipo == "EmailNotificacao":
+         return EmailNotificacao()
+      elif tipo == "WatsAppNotificacao":
+         return WatsAppNotificacao()
+      
+tipo = input("Tipo:")
+notificador = NotificacaoFactory.criar_notificacao(tipo)
+
+
+#=====MODEL.PY=====#
+
+class TarefaModel:
+    def __init__(self):
+        self.tarefas = []
+
+    def adicionar_tarefa(self, tarefa):
+        self.tarefas.append(tarefa)
+
+    def listar_tarefas(self):
+        return self.tarefas
+
+#=====VIEW.PY======#
+
+class TarefaView:
+    def mostrar_menu(self):
+        return input("1-Add, 2-List, 3-Sair: ")
+
+    def pedir_tarefa(self):
+        return input("Digite a tarefa: ")
+
+    def mostrar_mensagem(self, msg):
+        print(msg)
+
+    def mostrar_tarefas(self, tarefas):
+        print("\n📋 Lista de Tarefas:")
+        for t in tarefas:
+            print(f"- {t}")
+
+
+#=====CONTROLLER.PY=====#
+
+class TarefaController:
+    def __init__(self, model, view):
+        self.model = model
+        self.view = view
+
+    def executar(self):
+        while True:
+            opcao = self.view.mostrar_menu()
+
+            if opcao == "1":
+                tarefa = self.view.pedir_tarefa()
+                self.model.adicionar_tarefa(tarefa)
+                self.view.mostrar_mensagem("✅ Tarefa salva!")
+
+            elif opcao == "2":
+                tarefas = self.model.listar_tarefas()
+                self.view.mostrar_tarefas(tarefas)
+
+            elif opcao == "3":
+                self.view.mostrar_mensagem("Encerrando...")
+                break
+
+
+#=====MAIN.PY=====#
+
+from model import TarefaModel
+from view import TarefaView
+from controller import TarefaController
+
+model = TarefaModel()
+view = TarefaView()
+controller = TarefaController(model, view)
+controller.executar()
